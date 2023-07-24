@@ -1,0 +1,70 @@
+import json
+import pytest
+from appium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+class TestTripAdvisorApp:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        desired_caps = {
+            "platformName": "Android",
+            "deviceName": "192.168.56.106:5555",
+            "appPackage": "com.tripadvisor.tripadvisor",
+            "appActivity": "com.tripadvisor.tripadvisor.TripAdvisorTripAdvisorActivity",
+            "noReset": True,
+            "fullReset": False,
+            "automationName": "UiAutomator2",
+        }
+        self.appium_service = AppiumService().start()
+        self.driver = webdriver.Remote('http://localhost:4723/wd/hub', desired_caps)
+        self.wait = WebDriverWait(self.driver, 10)
+        self.hotel_name = "The Grosvenor Hotel"
+        self.dates = ["2023-07-22", "2023-07-23", "2023-07-24", "2023-07-25", "2023-07-26"]
+        self.prices = {}
+
+
+    def teardown(self):
+        self.driver.quit()
+
+
+    def test_find_hotel_and_get_prices(self):
+        self.search_hotel()
+        self.get_prices_from_sources()
+        self.save_screenshot()
+        self.save_prices_to_json()
+
+
+    def search_hotel(self):
+        search_box = self.wait.until(EC.presence_of_element_located((By.ID, "com.tripadvisor.tripadvisor:id/search")))
+        search_box.click()
+        search_box.send_keys(self.hotel_name)
+        self.driver.press_keycode(66)
+
+
+    def get_prices_from_sources(self):
+        for date in self.dates:
+            self.get_price_for_date(date)
+
+
+    def get_price_for_date(self, date):
+        date_element = self.wait.until(EC.presence_of_element_located((By.XPATH, f"//*[@text='{date}']")))
+        date_element.click()
+        self.wait.until(EC.presence_of_element_located((By.ID, "com.tripadvisor.tripadvisor:id/price")))
+        price_element = self.wait.until(EC.presence_of_element_located((By.ID, "com.tripadvisor.tripadvisor:id/price")))
+        price_text = price_element.text
+        self.prices[date] = price_text
+
+
+    def save_screenshot(self):
+        self.driver.save_screenshot("screenshot.png")
+
+
+    def save_prices_to_json(self):
+        with open("prices.json", "w") as f:
+            json.dump(self.prices, f)
+
+
+if __name__ == "__main__":
+    pytest.main()
