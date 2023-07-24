@@ -5,7 +5,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-# Функція для отримання діапазону цін на сайті
 def get_price_range(driver):
     wait = WebDriverWait(driver, 10)
     price_element = wait.until(EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/div[2]/div[2]/div[2]/div/div[1]/div/div[2]/div/div/div[2]/div[1]/div[2]")))
@@ -13,12 +12,10 @@ def get_price_range(driver):
     return price_range
 
 
-# Функція для збереження знімку екрана
 def save_screenshot(driver, screenshot_name):
     driver.save_screenshot(screenshot_name)
 
 
-# Функція для додавання цін у файл JSON
 def add_prices_to_json(hotel_name, date, provider, price, screenshot_name):
     data = {
         hotel_name: {
@@ -39,31 +36,21 @@ def add_prices_to_json(hotel_name, date, provider, price, screenshot_name):
 
 def main():
     hotel_name = "Grosvenor Hotel"
-    date = "2023-07-22" # Ваша обрана дата
-    provider = "TripAdvisor"  # Постачальник ціни
+    date = "2023-07-22"
+    provider = "TripAdvisor"
     screenshot_name = "screenshot.png"
-
-    # Запускаємо веб-драйвер Firefox
     driver = webdriver.Firefox()
     driver.get(
         "https://www.tripadvisor.ru/Restaurant_Review-g255103-d2572011-Reviews-Grosvenor_Hotel-Perth_Greater_Perth_Western_Australia.html")
-
     try:
-        # Отримуємо діапазон цін
         price_range = get_price_range(driver)
-
-        # Зберігаємо знімок екрана
         save_screenshot(driver, screenshot_name)
-
-        # Закриваємо веб-драйвер
         driver.quit()
-
-        # Додаємо ціни у файл JSON
         add_prices_to_json(hotel_name, date, provider, price_range, screenshot_name)
-
     except Exception as e:
         print("Помилка: ", str(e))
         driver.quit()
+
 
 
 if __name__ == "__main__":
